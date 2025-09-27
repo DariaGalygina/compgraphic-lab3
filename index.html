@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAD Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>KAD Editor</h1>
+        
+        <div class="controls">
+            <div class="toolbar">
+                <div class="tool-group">
+                    <button id="drawBtn">Рисование</button>
+                    <button id="fillBtn">Заливка цветом</button>
+                    <button id="patternFillBtn">Заливка рисунком</button>
+                    <button id="boundaryBtn">Выделение границы</button>
+                    <button id="clearBtn">Очистить</button>
+                </div>
+            </div>
+            
+            <div class="settings">
+                <div class="color-picker-container">
+                    <label>Цвет:</label>
+                    <input type="color" id="colorPicker" value="#667eea">
+                </div>
+                
+                <div class="file-upload-container">
+                    <label>Загрузить рисунок:</label>
+                    <input type="file" id="patternFile" accept="image/*">
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="500"></canvas>
+        </div>
+        
+        <div class="status" id="status">Выберите инструмент для начала работы</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
