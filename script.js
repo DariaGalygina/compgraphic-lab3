@@ -9,7 +9,7 @@ const colorPicker = document.getElementById('colorPicker');
 const patternFile = document.getElementById('patternFile');
 const status = document.getElementById('status');
 
-// Переменные состояния
+// Состояния
 let isDrawing = false;
 let currentTool = 'draw';
 let lastX = 0;
@@ -26,11 +26,9 @@ function initCanvas() {
     ctx.lineCap = 'round';
 }
 
-// Установка активного инструмента
 function setActiveTool(tool) {
     currentTool = tool;
     
-    // Cтили кнопок
     drawBtn.classList.remove('active');
     fillBtn.classList.remove('active');
     patternFillBtn.classList.remove('active');
@@ -51,21 +49,19 @@ function setActiveTool(tool) {
     }
 }
 
-// Получение цвета пикселя в формате RGB
+// Цвет пикселя в RGB
 function getPixelColor(x, y) {
     const imageData = ctx.getImageData(x, y, 1, 1).data;
     return `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`;
 }
 
-// Сравнение цветов с допуском 
+// Сравнение 
 function colorsEqual(color1, color2, tolerance = 5) {
     if (color1 === color2) return true;
     
-    // Извлекаем компоненты RGB
     const rgb1 = color1.match(/\d+/g).map(Number);
     const rgb2 = color2.match(/\d+/g).map(Number);
     
-    // Проверяем разницу для каждого компонента
     for (let i = 0; i < 3; i++) {
         if (Math.abs(rgb1[i] - rgb2[i]) > tolerance) {
             return false;
@@ -74,33 +70,30 @@ function colorsEqual(color1, color2, tolerance = 5) {
     return true;
 }
 
-// 1а) Рекурсивный алгоритм заливки на основе серий пикселов (линий)
+// 1а. Рекурсивный алгоритм заливки на основе серий пикселов (линий)
 function floodFillLine(x, y, targetColor, fillColor) {
-    // Получаем текущий цвет пикселя
+
     const currentColor = getPixelColor(x, y);
     
-    // Если текущий цвет уже совпадает с цветом заливки или не совпадает с целевым, выходим
     if (colorsEqual(currentColor, fillColor) || !colorsEqual(currentColor, targetColor)) {
         return;
     }
     
-    // Находим левую границу (первый пиксель, который еще нужно закрасить)
     let left = x;
     while (left > 0 && colorsEqual(getPixelColor(left - 1, y), targetColor)) {
         left--;
     }
     
-    // Находим правую границу (последний пиксель, который еще нужно закрасить)
     let right = x;
     while (right < canvas.width - 1 && colorsEqual(getPixelColor(right + 1, y), targetColor)) {
         right++;
     }
     
-    // Закрашиваем горизонтальную линию от left до right
+    // Закрашивание горизонтальной линии от left до right
     ctx.fillStyle = fillColor;
     ctx.fillRect(left, y, right - left + 1, 1);
     
-    // Проверяем строку выше
+    // Строка выше
     let spanAbove = false;
     for (let i = left; i <= right; i++) {
         if (y > 0) {
@@ -116,7 +109,7 @@ function floodFillLine(x, y, targetColor, fillColor) {
         }
     }
     
-    // Проверяем строку ниже
+    // Строка ниже
     let spanBelow = false;
     for (let i = left; i <= right; i++) {
         if (y < canvas.height - 1) {
@@ -133,7 +126,7 @@ function floodFillLine(x, y, targetColor, fillColor) {
     }
 }
 
-// Вспомогательная функция для заливки изображением - находит границы области
+// Границы области
 function getFillAreaBoundaries(x, y, targetColor) {
     const visited = new Set();
     const boundaries = [];
@@ -151,7 +144,6 @@ function getFillAreaBoundaries(x, y, targetColor) {
         const point = queue.shift();
         const {x: px, y: py} = point;
         
-        // Обновляем границы области
         minX = Math.min(minX, px);
         maxX = Math.max(maxX, px);
         minY = Math.min(minY, py);
@@ -159,7 +151,7 @@ function getFillAreaBoundaries(x, y, targetColor) {
         
         boundaries.push(point);
         
-        // Проверяем соседние пиксели
+        // Соседние пиксели
         for (const dir of directions) {
             const nx = px + dir.dx;
             const ny = py + dir.dy;
@@ -186,11 +178,9 @@ function fillWithPatternTiling(bounds, patternImg) {
     const patternWidth = patternImg.width;
     const patternHeight = patternImg.height;
     
-    // Вычисляем начальные координаты для выравнивания
     const startX = bounds.minX;
     const startY = bounds.minY;
-    
-    // Рисуем изображение циклически
+   
     for (let y = startY; y <= bounds.maxY; y += patternHeight) {
         for (let x = startX; x <= bounds.maxX; x += patternWidth) {
             // Рисуем изображение в исходном размере
@@ -204,11 +194,9 @@ function fillWithPatternClipping(bounds, patternImg) {
     const patternWidth = patternImg.width;
     const patternHeight = patternImg.height;
     
-    // Вычисляем смещение для центрирования (опционально)
     const offsetX = Math.max(0, Math.floor((patternWidth - (bounds.maxX - bounds.minX + 1)) / 2));
     const offsetY = Math.max(0, Math.floor((patternHeight - (bounds.maxY - bounds.minY + 1)) / 2));
     
-    // Рисуем только ту часть изображения, которая попадает в область
     ctx.drawImage(
         patternImg,
         offsetX, // source x
@@ -222,7 +210,7 @@ function fillWithPatternClipping(bounds, patternImg) {
     );
 }
 
-// 1б) Заливка рисунком
+// 1б. Заливка рисунком
 function floodFillPattern(x, y, targetColor, patternImg) {
     if (!patternImg) {
         status.textContent = 'Сначала загрузите изображение!';
@@ -231,13 +219,11 @@ function floodFillPattern(x, y, targetColor, patternImg) {
 
     const currentColor = getPixelColor(x, y);
     
-    // Если точка уже не целевого цвета, выходим
     if (!colorsEqual(currentColor, targetColor)) {
         status.textContent = 'Точка не подходит для заливки';
         return;
     }
 
-    // Получаем информацию об области заливки
     const areaInfo = getFillAreaBoundaries(x, y, targetColor);
     
     if (areaInfo.points.length === 0) {
@@ -251,20 +237,17 @@ function floodFillPattern(x, y, targetColor, patternImg) {
 
     status.textContent = `Область: ${width}x${height}, Изображение: ${patternWidth}x${patternHeight}`;
 
-    // Сохраняем текущее состояние
     ctx.save();
 
-    // Создаем маску для области заливки
+    // Маска для области заливки
     ctx.beginPath();
     
-    // Группируем точки по строкам для создания прямоугольников
     const rows = {};
     areaInfo.points.forEach(point => {
         if (!rows[point.y]) rows[point.y] = [];
         rows[point.y].push(point.x);
     });
 
-    // Создаем клип по области заливки
     Object.keys(rows).forEach(y => {
         const xCoords = rows[y].sort((a, b) => a - b);
         let startX = xCoords[0];
@@ -284,7 +267,6 @@ function floodFillPattern(x, y, targetColor, patternImg) {
     
     ctx.clip();
 
-    // Определяем стратегию заливки
     if (patternWidth <= width && patternHeight <= height) {
         // Маленькое изображение - циклическое повторение
         fillWithPatternTiling(bounds, patternImg);
@@ -293,19 +275,17 @@ function floodFillPattern(x, y, targetColor, patternImg) {
         fillWithPatternClipping(bounds, patternImg);
     }
 
-    // Восстанавливаем состояние
     ctx.restore();
     
     status.textContent = 'Заливка изображением завершена';
 }
 
-// Простой алгоритм выделения границы - обход по контуру фигуры
+// Выделение границы - обход по контуру фигуры
 function traceBoundary(startX, startY) {
     const visited = new Set();
     const boundaryPoints = [];
     const targetColor = getPixelColor(startX, startY);
     
-    // Если начальная точка уже на границе (не белая), ищем белую точку внутри
     if (!colorsEqual(targetColor, 'rgb(255,255,255)')) {
         // Ищем белую точку в окрестности
         for (let dy = -1; dy <= 1; dy++) {
@@ -323,7 +303,6 @@ function traceBoundary(startX, startY) {
         }
     }
     
-    // Направления для обхода (по часовой стрелке)
     const directions = [
         { dx: 1, dy: 0 },   // вправо
         { dx: 0, dy: 1 },   // вниз
@@ -333,22 +312,21 @@ function traceBoundary(startX, startY) {
     
     let x = startX;
     let y = startY;
-    let dirIndex = 0; // Начинаем движение вправо
+    let dirIndex = 0; // Двигаемся вправо
     
-    // Находим первую граничную точку
+    // Первая граничная точка
     while (true) {
         if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
-            return []; // Вышли за границы
+            return [];
         }
         
         const currentColor = getPixelColor(x, y);
         
-        // Если нашли небелую точку - это граница
+        // Если нет белой точки - это граница
         if (!colorsEqual(currentColor, 'rgb(255,255,255)')) {
             break;
         }
         
-        // Двигаемся в текущем направлении
         x += directions[dirIndex].dx;
         y += directions[dirIndex].dy;
     }
@@ -359,14 +337,13 @@ function traceBoundary(startX, startY) {
     boundaryPoints.push({ x, y });
     visited.add(`${x},${y}`);
     
-    // Обходим границу
     let steps = 0;
     const maxSteps = canvas.width * canvas.height;
     
     while (steps < maxSteps) {
         steps++;
         
-        // Пробуем все направления для поиска следующей граничной точки
+        // Все направления для поиска следующей граничной точки
         let foundNext = false;
         
         for (let i = 0; i < directions.length; i++) {
@@ -385,7 +362,7 @@ function traceBoundary(startX, startY) {
                     visited.add(key);
                     x = nextX;
                     y = nextY;
-                    dirIndex = (newDirIndex + 3) % directions.length; // Поворачиваем налево
+                    dirIndex = (newDirIndex + 3) % directions.length; // Поворот налево
                     foundNext = true;
                     break;
                 }
@@ -409,7 +386,6 @@ function drawBoundary(boundaryPoints) {
         return;
     }
     
-    // Рисуем границу выбранным цветом
     ctx.beginPath();
     ctx.moveTo(boundaryPoints[0].x, boundaryPoints[0].y);
     
@@ -417,7 +393,7 @@ function drawBoundary(boundaryPoints) {
         ctx.lineTo(boundaryPoints[i].x, boundaryPoints[i].y);
     }
     
-    // Замыкаем контур
+    // Замыкание контура
     ctx.closePath();
     ctx.strokeStyle = colorPicker.value;
     ctx.lineWidth = 2;
@@ -425,12 +401,10 @@ function drawBoundary(boundaryPoints) {
     
     status.textContent = `Граница выделена. Точек: ${boundaryPoints.length}`;
     
-    // Восстанавливаем исходные настройки для рисования
     ctx.strokeStyle = colorPicker.value;
     ctx.lineWidth = 2;
 }
 
-// Обработчики событий мыши
 canvas.addEventListener('mousedown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor(e.clientX - rect.left);
