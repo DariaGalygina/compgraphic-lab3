@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Градиентный треугольник</h1>
+        
+        <div class="controls">
+            <div class="vertices-row">
+                <div class="vertex-group">
+                    <label>Вершина 1:</label>
+                    <div class="coord-inputs">
+                        <input type="number" id="x1" value="400" placeholder="X">
+                        <input type="number" id="y1" value="300" placeholder="Y">
+                    </div>
+                    <div class="color-input">
+                        <input type="color" id="color1" value="#ff0000">
+                    </div>
+                </div>
+                
+                <div class="vertex-group">
+                    <label>Вершина 2:</label>
+                    <div class="coord-inputs">
+                        <input type="number" id="x2" value="700" placeholder="X">
+                        <input type="number" id="y2" value="400" placeholder="Y">
+                    </div>
+                    <div class="color-input">
+                        <input type="color" id="color2" value="#00ff00">
+                    </div>
+                </div>
+                
+                <div class="vertex-group">
+                    <label>Вершина 3:</label>
+                    <div class="coord-inputs">
+                        <input type="number" id="x3" value="300" placeholder="X">
+                        <input type="number" id="y3" value="100" placeholder="Y">
+                    </div>
+                    <div class="color-input">
+                        <input type="color" id="color3" value="#0000ff">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toolbar">
+                <div class="tool-group">
+                    <button onclick="Triangle()">Построить треугольник</button>
+                    <button onclick="DrawGradient()">Добавить градиент</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="myCanvas" width="900" height="600"></canvas>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
