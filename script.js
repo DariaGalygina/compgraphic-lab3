@@ -638,8 +638,6 @@ canvas.addEventListener('mousedown', (e) => {
         }
         return;
     }
-
-    // остальной код для других инструментов...
 });
 
 // Кнопки выбора
